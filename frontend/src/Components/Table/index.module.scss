@@ -12,6 +12,29 @@
   height: 4 * $unit;
 }
 
+.largerText {
+  font-size: 18px; 
+}
+
+.dropdownContainer {
+  position: relative;
+  display: inline-block;
+}
+.dropDownButton{
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+.dropdownMenu {
+  position: absolute;
+  right: 0;
+  z-index: 10;
+  min-width: 120px;
+  background-color: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
 .headerField {
   border-top: 1px solid $black200;
   border-bottom: 1px solid $black1000;

@@ -1,0 +1,95 @@
+{
+  "categories": [
+    {
+      "category_id": "10000000",
+      "group": "special",
+      "hierarchy": [
+        "Bank Fees"
+      ]
+    },
+    {
+      "category_id": "11000000",
+      "group": "special",
+      "hierarchy": [
+        "Cash Advance"
+      ]
+    },
+    {
+      "category_id": "12000000",
+      "group": "place",
+      "hierarchy": [
+        "Community"
+      ]
+    },
+    {
+      "category_id": "13000000",
+      "group": "place",
+      "hierarchy": [
+        "Food and Drink"
+      ]
+    },
+    {
+      "category_id": "14000000",
+      "group": "place",
+      "hierarchy": [
+        "Healthcare"
+      ]
+    },
+    {
+      "category_id": "15000000",
+      "group": "special",
+      "hierarchy": [
+        "Interest"
+      ]
+    },
+    {
+      "category_id": "16000000",
+      "group": "special",
+      "hierarchy": [
+        "Payment"
+      ]
+    },
+    {
+      "category_id": "17000000",
+      "group": "place",
+      "hierarchy": [
+        "Recreation"
+      ]
+    },
+    {
+      "category_id": "18000000",
+      "group": "place",
+      "hierarchy": [
+        "Service"
+      ]
+    },
+    {
+      "category_id": "19000000",
+      "group": "place",
+      "hierarchy": [
+        "Shops"
+      ]
+    },
+    {
+      "category_id": "20000000",
+      "group": "special",
+      "hierarchy": [
+        "Tax"
+      ]
+    },
+    {
+      "category_id": "21000000",
+      "group": "special",
+      "hierarchy": [
+        "Transfer"
+      ]
+    },
+    {
+      "category_id": "22000000",
+      "group": "place",
+      "hierarchy": [
+        "Travel"
+      ]
+    }
+  ]
+}

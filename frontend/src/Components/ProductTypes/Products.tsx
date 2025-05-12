@@ -96,15 +96,16 @@ const Products = () => {
         />
       )}
       {!products.includes("payment_initiation") && !isCraProductsExclusively && (
-          <Endpoint
-              endpoint="balance"
-              name="Balance"
-              categories={balanceCategories}
-              schema="/accounts/balance/get/"
-              description="Check balances in real time to prevent non-sufficient funds
-        fees."
-              transformData={transformBalanceData}
-          />
+        <></>
+        //   <Endpoint
+        //       endpoint="balance"
+        //       name="Balance"
+        //       categories={balanceCategories}
+        //       schema="/accounts/balance/get/"
+        //       description="Check balances in real time to prevent non-sufficient funds
+        // fees."
+        //       transformData={transformBalanceData}
+        //   />
       )}
       {products.includes("investments") && (
         <>

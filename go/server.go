@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -16,6 +17,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	plaid "github.com/plaid/plaid-go/v31/plaid"
+	"github.com/redis/go-redis/v9"
 )
 
 var (
@@ -105,6 +107,7 @@ func main() {
 	r.GET("/api/identity", identity)
 	r.GET("/api/transactions", transactions)
 	r.POST("/api/transactions", transactions)
+	r.GET("/api/transactionsDB", transactionsDB)
 	r.GET("/api/payment", payment)
 	r.GET("/api/create_public_token", createPublicToken)
 	r.POST("/api/create_link_token", createLinkToken)
@@ -329,10 +332,10 @@ func identity(c *gin.Context) {
 	})
 }
 
+// puts the received data in db instead of sending it back.
 func transactions(c *gin.Context) {
-	ctx := context.Background()
-
 	// Set cursor to empty to receive all historical updates
+	ctx := context.Background()
 	var cursor *string
 
 	// New transaction updates since "cursor"
@@ -340,7 +343,6 @@ func transactions(c *gin.Context) {
 	var modified []plaid.Transaction
 	var removed []plaid.RemovedTransaction // Removed transaction ids
 	hasMore := true
-	// Iterate through each page of new transaction updates for item
 	for hasMore {
 		request := plaid.NewTransactionsSyncRequest(accessToken)
 		if cursor != nil {
@@ -354,35 +356,178 @@ func transactions(c *gin.Context) {
 			return
 		}
 
-		// Update cursor to the next cursor
 		nextCursor := resp.GetNextCursor()
 		cursor = &nextCursor
-
-		// If no transactions are available yet, wait and poll the endpoint.
-		// Normally, we would listen for a webhook, but the Quickstart doesn't
-		// support webhooks. For a webhook example, see
-		// https://github.com/plaid/tutorial-resources or
-		// https://github.com/plaid/pattern
 
 		if *cursor == "" {
 			time.Sleep(2 * time.Second)
 			continue
 		}
 
-		// Add this page of results
 		added = append(added, resp.GetAdded()...)
 		modified = append(modified, resp.GetModified()...)
 		removed = append(removed, resp.GetRemoved()...)
 		hasMore = resp.GetHasMore()
 	}
 
+	fmt.Printf("%v", added[0].Category[0])
+	//go through added and sort out categories (Just take from tsx code)
+
+	fmt.Printf("%v", len(added))
 	sort.Slice(added, func(i, j int) bool {
 		return added[i].GetDate() < added[j].GetDate()
 	})
-	latestTransactions := added[len(added)-9:]
+	// loop through the data, put each transaction as a value into a key value (year + "-" + month)
+	//
+	years := []string{"2022", "2023", "2024", "2025", "2026", "2027", "2028"}
+	months := []string{"01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"}
 
+	dateMap := make(map[string][]plaid.Transaction)
+	client := redis.NewClient(&redis.Options{
+		Addr:     "localhost:6379",
+		Password: "",
+		DB:       0,
+		Protocol: 2,
+	})
+	user := "joshyeh123"
+	val, err := client.Get(ctx, user).Result()
+	if err != nil {
+		fmt.Println("no data available")
+	} else {
+		retrievedMap := make(map[string][]plaid.Transaction)
+		err = json.Unmarshal([]byte(val), &retrievedMap)
+		if err != nil {
+			panic(err)
+		}
+		if len(retrievedMap) != 0 {
+			dateMap = retrievedMap
+		}
+	}
+	for i := 0; i < len(years); i++ {
+		year := years[i]
+		for j := 0; j < len(months); j++ {
+			month := months[j]
+			yearmonth := year + "-" + month
+			for x := 0; x < len(added); x++ {
+				if strings.Contains(added[x].GetDate(), yearmonth) {
+					found := false
+					for y := 0; y < len(dateMap[yearmonth]); y++ {
+						if dateMap[yearmonth][y].TransactionId == added[x].TransactionId {
+							found = true
+							break
+						}
+					}
+					if !found {
+						dateMap[yearmonth] = append(dateMap[yearmonth], added[x])
+						fmt.Printf("New Item added to db: %v\n", added[x])
+					}
+				}
+			}
+		}
+	}
+	jsonData, err := json.Marshal(dateMap)
+	if err != nil {
+		panic(err)
+	}
+	err = client.Set(ctx, user, jsonData, 0).Err()
+	if err != nil {
+		panic(err)
+	}
+
+	//so we have categorized
+	// fmt.Printf("%v", categorizedAdded)
+	c.JSON(http.StatusOK, gin.H{})
+}
+
+// TODO: function to return transactions based on a given month.
+func transactionsDB(c *gin.Context) {
+	ctx := context.Background()
+
+	month := c.Query("month")
+	year := c.Query("year")
+
+	fmt.Printf("%v\n", month)
+	fmt.Printf("%v\n", year)
+	client := redis.NewClient(&redis.Options{
+		Addr:     "localhost:6379",
+		Password: "",
+		DB:       0,
+		Protocol: 2,
+	})
+	user := "joshyeh123"
+	val, err := client.Get(ctx, user).Result()
+	if err != nil {
+		panic(err)
+	}
+	var retrievedMap map[string][]plaid.Transaction
+	err = json.Unmarshal([]byte(val), &retrievedMap)
+	if err != nil {
+		panic(err)
+	}
+	yearmonth := year + "-" + month
+	added := retrievedMap[yearmonth]
+	if len(added) == 0 {
+		c.JSON(http.StatusOK, gin.H{
+			"latest_transactions": plaid.CategorizedTransaction{},
+			"total_spent":         0,
+			"total_gained":        0,
+		})
+	}
+	fmt.Printf("%v", added[0].Category[0])
+	//go through added and sort out categories (Just take from tsx code)
+
+	fmt.Printf("%v", len(added))
+	total_spent := 0
+	total_gained := 0
+
+	var categorizedAdded plaid.CategorizedTransaction
+	for i := 0; i < len(added); i++ {
+		amt := int(added[i].Amount)
+		if len(added[i].Category) > 1 && added[i].Category[1] != "Credit Card" {
+			if amt < 0 {
+				total_gained -= int(added[i].Amount)
+			} else {
+				total_spent += int(added[i].Amount)
+			}
+		}
+		category := added[i].Category[0]
+		switch category {
+		case "Bank Fees":
+			categorizedAdded.BankFees = append(categorizedAdded.BankFees, added[i])
+		case "Cash Advance":
+			categorizedAdded.CashAdvance = append(categorizedAdded.CashAdvance, added[i])
+		case "Community":
+			categorizedAdded.Community = append(categorizedAdded.Community, added[i])
+		case "Food and Drink":
+			categorizedAdded.FoodAndDrink = append(categorizedAdded.FoodAndDrink, added[i])
+		case "Healthcare":
+			categorizedAdded.Healthcare = append(categorizedAdded.Healthcare, added[i])
+		case "Interest":
+			categorizedAdded.Interest = append(categorizedAdded.Interest, added[i])
+		case "Payment":
+			categorizedAdded.Payment = append(categorizedAdded.Payment, added[i])
+		case "Recreation":
+			categorizedAdded.Recreation = append(categorizedAdded.Recreation, added[i])
+		case "Service":
+			categorizedAdded.Service = append(categorizedAdded.Service, added[i])
+		case "Shops":
+			categorizedAdded.Shops = append(categorizedAdded.Shops, added[i])
+		case "Tax":
+			categorizedAdded.Tax = append(categorizedAdded.Tax, added[i])
+		case "Transfer":
+			categorizedAdded.Transfer = append(categorizedAdded.Transfer, added[i])
+		case "Travel":
+			categorizedAdded.Travel = append(categorizedAdded.Travel, added[i])
+		default:
+			categorizedAdded.Other = append(categorizedAdded.Other, added[i])
+		}
+	}
+
+	fmt.Printf("%v", categorizedAdded)
 	c.JSON(http.StatusOK, gin.H{
-		"latest_transactions": latestTransactions,
+		"latest_transactions": categorizedAdded,
+		"total_spent":         total_spent,
+		"total_gained":        total_gained,
 	})
 }
 

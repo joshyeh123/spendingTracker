@@ -78,7 +78,7 @@ const Endpoint = (props: Props) => {
             className={styles.sendRequest}
             onClick={getData}
           >
-            {isLoading ? "Loading..." : `Send request`}
+            {isLoading ? "Loading..." : `Refresh Data`}
           </Button>
           {pdf != null && (
             <Button

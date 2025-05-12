@@ -23,19 +23,15 @@ const Header = () => {
 
   return (
     <div className={styles.grid}>
-      <h3 className={styles.title}>Plaid Quickstart</h3>
+      <h3 className={styles.title}>Joshua's Spending Tracker</h3>
 
       {!linkSuccess ? (
         <>
           <h4 className={styles.subtitle}>
-            A sample end-to-end integration with Plaid
+            A simple tracker to keep track of spending month to month.
           </h4>
           <p className={styles.introPar}>
-            The Plaid flow begins when your user wants to connect their bank
-            account to your app. Simulate this by clicking the button below to
-            launch Link - the client-side component that your users will
-            interact with in order to link their accounts to Plaid and allow you
-            to access their accounts via the Plaid API.
+            Plaid has its own API to connect banks securely, get started with the button below to connect to your bank
           </p>
           {/* message if backend is not running and there is no link token */}
           {!backend ? (
@@ -116,16 +112,17 @@ const Header = () => {
           ) : (
             /* If not using the payment_initiation product, show the item_id and access_token information */ <>
               {isItemAccess ? (
-                <h4 className={styles.subtitle}>
-                  Congrats! By linking an account, you have created an{" "}
-                  <InlineLink
-                    href="http://plaid.com/docs/quickstart/glossary/#item"
-                    target="_blank"
-                  >
-                    Item
-                  </InlineLink>
-                  .
-                </h4>
+                <></>
+                // <h4 className={styles.subtitle}>
+                //   Congrats! By linking an account, you have created an{" "}
+                //   <InlineLink
+                //     href="http://plaid.com/docs/quickstart/glossary/#item"
+                //     target="_blank"
+                //   >
+                //     Item
+                //   </InlineLink>
+                //   .
+                // </h4>
               ) : userToken ? (
                 <h4 className={styles.subtitle}>
                   Congrats! You have successfully linked data to a User.
@@ -137,7 +134,7 @@ const Header = () => {
                   </Callout>
                 </h4>
               )}
-              <div className={styles.itemAccessContainer}>
+              {/* <div className={styles.itemAccessContainer}>
                 {itemId && (
                   <p className={styles.itemAccessRow}>
                     <span className={styles.idName}>item_id</span>
@@ -158,15 +155,15 @@ const Header = () => {
                     <span className={styles.tokenText}>{userToken}</span>
                   </p>
                 )}
-              </div>
-              {(isItemAccess || userToken) && (
+              </div> */}
+              {/* {(isItemAccess || userToken) && (
                 <p className={styles.requests}>
                   Now that you have {accessToken && "an access_token"}
                   {accessToken && userToken && " and "}
                   {userToken && "a user_token"}, you can make all of the
                   following requests:
                 </p>
-              )}
+              )} */}
             </>
           )}
         </>

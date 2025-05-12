@@ -2,6 +2,8 @@ import React, { useEffect, useContext, useCallback } from "react";
 
 import Header from "./Components/Headers";
 import Products from "./Components/ProductTypes/Products";
+import SpendingSummary from "./Components/ProductTypes/SpendingSummary";
+import Balance from "./Components/ProductTypes/Balance";
 import Items from "./Components/ProductTypes/Items";
 import Context from "./Context";
 
@@ -11,7 +13,6 @@ import { CraCheckReportProduct } from "plaid";
 const App = () => {
   const { linkSuccess, isPaymentInitiation, itemId, dispatch } =
     useContext(Context);
-
   const getInfo = useCallback(async () => {
     const response = await fetch("/api/info", { method: "POST" });
     if (!response.ok) {
@@ -123,12 +124,14 @@ const App = () => {
     <div className={styles.App}>
       <div className={styles.container}>
         <Header />
-        {linkSuccess && (
+        {/* {linkSuccess && ( */}
           <>
-            <Products />
-            {!isPaymentInitiation && itemId && <Items />}
+            {/* <Products /> */}
+            {/* <Balance /> */}
+            <SpendingSummary />
+            {/* {!isPaymentInitiation && itemId && <Items />} */}
           </>
-        )}
+        {/* )} */}
       </div>
     </div>
   );
